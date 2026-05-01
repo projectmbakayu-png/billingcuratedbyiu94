@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billing Jastip</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f3;min-height:100vh}
+.shell{max-width:960px;margin:0 auto;padding:1.5rem 1rem}
+h1{font-size:18px;font-weight:500;margin-bottom:3px}
+.sub{font-size:13px;color:#666;margin-bottom:1.25rem}
+nav{display:flex;border-bottom:1px solid #ddd;margin-bottom:1.25rem;overflow-x:auto}
+.tab{font-size:13px;padding:9px 16px;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;color:#666;white-space:nowrap;flex-shrink:0;font-family:inherit}
+.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
+.page{display:none;flex-direction:column;gap:1rem}
+.page.active{display:flex}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#fff;border-radius:10px;border:0.5px solid #e0e0e0;padding:.75rem 1rem}
+.stat-lbl{font-size:11px;color:#888;margin-bottom:4px}
+.stat-val{font-size:20px;font-weight:500}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input,select,textarea{font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:#888}
+.btn{font-size:13px;padding:6px 14px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#1a1a1a;cursor:pointer;white-space:nowrap;font-family:inherit}
+.btn:hover{background:#f0f0ee}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-green{border-color:#1D9E75;color:#0F6E56}.btn-green:hover{background:#E1F5EE}
+.btn-amber{border-color:#BA7517;color:#854F0B}.btn-amber:hover{background:#FAEEDA}
+.btn-blue{border-color:#378ADD;color:#185FA5}.btn-blue:hover{background:#E6F1FB}
+.btn-red{border-color:#E24B4A;color:#A32D2D}.btn-red:hover{background:#FCEBEB}
+.tbl-wrap{overflow-x:auto;border:1px solid #e0e0e0;border-radius:10px;background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:580px}
+thead{background:#fafaf8}
+th{font-size:11px;color:#888;font-weight:500;padding:9px 12px;text-align:left;border-bottom:1px solid #eee}
+td{padding:9px 12px;border-bottom:1px solid #eee;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fafaf8}
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px}
+.bl{background:#E1F5EE;color:#0F6E56}
+.bt{background:#E6F1FB;color:#185FA5}
+.bb{background:#FAEEDA;color:#854F0B}
+.aksi{display:flex;gap:5px;flex-wrap:wrap}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:center;justify-content:center;z-index:50;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;border:1px solid #ddd;padding:1.5rem;width:460px;max-width:100%;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:1rem}
+.mrow{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:6px 0;border-bottom:1px solid #eee}
+.mrow:last-of-type{border-bottom:none}
+.mfooter{display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end;flex-wrap:wrap}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.full{grid-column:1/-1}
+.flbl{font-size:12px;color:#888;margin-bottom:4px}
+.fi{width:100%;font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;font-family:inherit}
+.fi:focus{border-color:#888;outline:none}
+.upload-zone{border:1.5px dashed #ccc;border-radius:10px;padding:2rem;text-align:center;cursor:pointer;color:#888;font-size:13px;background:#fff}
+.upload-zone:hover{background:#fafaf8}
+.info{font-size:12px;color:#555;background:#fafaf8;border-radius:8px;padding:.65rem .9rem;line-height:1.7;border:1px solid #eee}
+.info code{background:#e8e8e5;padding:1px 5px;border-radius:4px;font-size:11px;font-family:monospace}
+.hist-item{padding:10px 12px;border-bottom:1px solid #eee}
+.hist-item:last-child{border-bottom:none}
+.hist-meta{font-size:11px;color:#888;margin-top:3px}
+.cust-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.cust-card{background:#fff;border:1px solid #eee;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+.cust-name{font-weight:500;font-size:14px}
+.cust-meta{font-size:12px;color:#888;margin-top:2px}
+.empty{text-align:center;padding:3rem;color:#aaa;font-size:13px}
+.toast{position:fixed;bottom:20px;right:20px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:9px 16px;font-size:13px;opacity:0;transition:opacity .3s;z-index:200;pointer-events:none;max-width:300px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.toast.show{opacity:1}
+.toast.ok{border-left:3px solid #1D9E75}
+.toast.err{border-left:3px solid #E24B4A}
+.suggest-box{position:relative;z-index:20;border:1px solid #ddd;border-radius:8px;background:#fff;display:none;max-height:150px;overflow-y:auto;margin-top:3px}
+.suggest-item{padding:8px 10px;cursor:pointer;border-bottom:1px solid #f0f0ee;font-size:13px}
+.suggest-item:last-child{border-bottom:none}
+.suggest-item:hover{background:#f5f5f3}
+@media(max-width:580px){.stats{grid-template-columns:repeat(2,1fr)}.fg{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <h1>Billing Jastip</h1>
+  <p class="sub">Kelola tagihan, pelanggan & histori pembayaran</p>
+  <nav>
+    <button class="tab active" onclick="switchTab('orders')">Pesanan</button>
+    <button class="tab" onclick="switchTab('customers')">Pelanggan</button>
+    <button class="tab" onclick="switchTab('history')">Histori</button>
+    <button class="tab" onclick="switchTab('import')">Import / Export</button>
+    <button class="tab" onclick="switchTab('settings')">Pengaturan</button>
+  </nav>
+
+  <!-- PESANAN -->
+  <div id="tab-orders" class="page active">
+    <div class="stats">
+      <div class="stat"><div class="stat-lbl">Total order</div><div class="stat-val" id="s-tot">0</div></div>
+      <div class="stat"><div class="stat-lbl">Belum ditagih</div><div class="stat-val" style="color:#854F0B" id="s-belum">0</div></div>
+      <div class="stat"><div class="stat-lbl">Menunggu bayar</div><div class="stat-val" style="color:#185FA5" id="s-tagih">0</div></div>
+      <div class="stat"><div class="stat-lbl">Lunas</div><div class="stat-val" style="color:#0F6E56" id="s-lunas">0</div></div>
+    </div>
+    <div class="toolbar">
+      <select id="f-status" onchange="renderOrders()">
+        <option value="">Semua status</option>
+        <option value="BELUM LUNAS">Belum lunas</option>
+        <option value="TAGIHAN DIKIRIM">Tagihan dikirim</option>
+        <option value="LUNAS">Lunas</option>
+      </select>
+      <input id="f-q" type="text" placeholder="Cari order / nama / produk..." style="width:220px" oninput="renderOrders()">
+      <button class="btn btn-blue" onclick="openAdd()">+ Tambah order</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Order ID</th><th>Pelanggan</th><th>Produk</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="orders-tbody"></tbody>
+      </table>
+      <div id="orders-empty" class="empty" style="display:none">Belum ada data pesanan. Upload CSV atau tambah manual.</div>
+    </div>
+  </div>
+
+  <!-- PELANGGAN -->
+  <div id="tab-customers" class="page">
+    <div class="toolbar">
+      <input id="cq" type="text" placeholder="Cari nama / no HP..." style="width:220px" oninput="renderCustomers()">
+      <button class="btn btn-blue" onclick="openAddCustomer()">+ Tambah pelanggan</button>
+    </div>
+    <div id="cust-grid" class="cust-grid"></div>
+    <div id="cust-empty" class="empty" style="display:none">Belum ada data pelanggan.</div>
+  </div>
+
+  <!-- HISTORI -->
+  <div id="tab-history" class="page">
+    <div class="toolbar">
+      <input id="h-q" type="text" placeholder="Cari histori..." style="width:220px" oninput="renderHistory()">
+      <button class="btn btn-red" onclick="clearHistory()">Hapus semua histori</button>
+    </div>
+    <div class="tbl-wrap">
+      <div id="hist-list" style="background:#fff"></div>
+      <div id="hist-empty" class="empty" style="display:none">Belum ada histori tagihan.</div>
+    </div>
+  </div>
+
+  <!-- IMPORT/EXPORT -->
+  <div id="tab-import" class="page">
+    <div class="info">
+      <strong>Format CSV (7 kolom):</strong><br>
+      <code>chat_id</code> &nbsp;·&nbsp; <code>order_id</code> &nbsp;·&nbsp; <code>nama_produk</code> &nbsp;·&nbsp; <code>qty</code> &nbsp;·&nbsp; <code>harga</code> &nbsp;·&nbsp; <code>fee_jastip</code> &nbsp;·&nbsp; <code>status</code><br><br>
+      Nilai status yang dikenali: <code>LUNAS</code> &nbsp;·&nbsp; <code>BELUM LUNAS</code> &nbsp;·&nbsp; <code>TAGIHAN DIKIRIM</code><br>
+      Nilai lain atau kosong → otomatis <strong>BELUM LUNAS</strong>. Baris header pertama dilewati otomatis.
+    </div>
+    <div class="upload-zone" onclick="document.getElementById('csv-input').click()">
+      Klik untuk upload file CSV dari Google Sheets
+      <div style="font-size:12px;color:#bbb;margin-top:6px">Di Google Sheets: File → Download → Comma Separated Values (.csv)</div>
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSV(this)">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-green" onclick="exportCSV()">Ekspor semua ke CSV</button>
+      <button class="btn btn-amber" onclick="exportLunas()">Ekspor hanya LUNAS</button>
+      <button class="btn" onclick="exportTemplate()">Download template CSV</button>
+    </div>
+    <div id="import-log" class="info" style="display:none;white-space:pre-wrap;font-family:monospace;font-size:12px"></div>
+    <div style="border-top:1px solid #eee;padding-top:1rem">
+      <div style="font-size:12px;color:#888;margin-bottom:8px">Danger zone</div>
+      <button class="btn btn-red" onclick="resetAllData()">Reset semua data (order, histori, pelanggan)</button>
+    </div>
+  </div>
+
+  <!-- PENGATURAN -->
+  <div id="tab-settings" class="page">
+    <div style="max-width:420px;display:flex;flex-direction:column;gap:12px">
+      <div><div class="flbl">Nama rekening (a.n)</div><input class="fi" id="cfg-nama" placeholder="Ayu Tarviana Dewi"></div>
+      <div><div class="flbl">No. rekening BCA</div><input class="fi" id="cfg-rek" placeholder="1010785517"></div>
+      <div><div class="flbl">Pesan pembuka tagihan</div><textarea class="fi" id="cfg-salam" rows="3"></textarea></div>
+      <div><div class="flbl">Catatan penutup</div><textarea class="fi" id="cfg-catatan" rows="2"></textarea></div>
+      <button class="btn btn-green" onclick="saveSettings()">Simpan pengaturan</button>
+      <div id="cfg-preview" style="display:none;margin-top:.5rem">
+        <div class="flbl" style="margin-bottom:4px">Preview pesan tagihan</div>
+        <pre id="cfg-preview-text" style="font-size:12px;background:#fafaf8;border:1px solid #eee;border-radius:8px;padding:10px;white-space:pre-wrap;font-family:system-ui;line-height:1.6;color:#444"></pre>
+      </div>
+      <button class="btn" onclick="previewCfg()">Lihat preview pesan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETAIL ORDER -->
+<div class="overlay" id="ov-detail">
+  <div class="modal">
+    <h3 id="det-title"></h3>
+    <div id="det-items"></div>
+    <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500;padding:10px 0 0;border-top:1px solid #eee;margin-top:6px">
+      <span>Total</span><span id="det-total"></span>
+    </div>
+    <div id="det-pesan-wrap" style="margin-top:12px;display:none">
+      <div class="flbl" style="margin-bottom:4px">Preview pesan WhatsApp</div>
+      <pre id="det-pesan" style="font-size:12px;background:#fafaf8;border:1px solid #eee;border-radius:8px;padding:10px;white-space:pre-wrap;max-height:160px;overflow:auto;font-family:system-ui;line-height:1.6"></pre>
+    </div>
+    <div class="mfooter">
+      <button class="btn" onclick="closeOv('ov-detail')">Tutup</button>
+      <button class="btn btn-red" id="det-del">Hapus</button>
+      <button class="btn" id="det-copy">Salin pesan WA</button>
+      <button class="btn btn-amber" id="det-tagih">Kirim tagihan</button>
+      <button class="btn btn-green" id="det-lunas">Tandai lunas</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TAMBAH ORDER -->
+<div class="overlay" id="ov-add">
+  <div class="modal">
+    <h3>Tambah order baru</h3>
+    <div class="fg">
+      <div class="full">
+        <div class="flbl">No. HP / Chat ID WA</div>
+        <input class="fi" id="a-chat" placeholder="628123..." oninput="autofillCustomer()" autocomplete="off">
+        <div class="suggest-box" id="a-suggest"></div>
+      </div>
+      <div class="full"><div class="flbl">Nama pelanggan</div><input class="fi" id="a-nama" placeholder="Kak Rina"></div>
+      <div class="full"><div class="flbl">Nama produk</div><input class="fi" id="a-produk" placeholder="Tas kulit..."></div>
+      <div><div class="flbl">Qty</div><input class="fi" id="a-qty" type="number" min="1" value="1"></div>
+      <div><div class="flbl">Harga (Rp)</div><input class="fi" id="a-harga" type="number" min="0" placeholder="150000"></div>
+      <div><div class="flbl">Fee jastip (Rp)</div><input class="fi" id="a-fee" type="number" min="0" value="0"></div>
+    </div>
+    <div class="mfooter">
+      <button class="btn" onclick="closeOv('ov-add')">Batal</button>
+      <button class="btn btn-blue" onclick="saveOrder()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PELANGGAN -->
+<div class="overlay" id="ov-cust">
+  <div class="modal">
+    <h3 id="cust-modal-title">Tambah pelanggan</h3>
+    <div class="fg">
+      <div class="full"><div class="flbl">Nama lengkap</div><input class="fi" id="c-nama" placeholder="Kak Rina"></div>
+      <div><div class="flbl">No. HP / Chat ID WA</div><input class="fi" id="c-hp" placeholder="628123..."></div>
+      <div><div class="flbl">Kota</div><input class="fi" id="c-kota" placeholder="Surabaya"></div>
+      <div class="full"><div class="flbl">Catatan (opsional)</div><input class="fi" id="c-note" placeholder="Ukuran, preferensi, dsb..."></div>
+    </div>
+    <div class="mfooter">
+      <button class="btn" onclick="closeOv('ov-cust')">Batal</button>
+      <button class="btn btn-blue" id="cust-save-btn" onclick="saveCustomer()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Storage ──
+const SK='bj_orders_v4',HK='bj_hist_v4',CK='bj_cfg_v4',PK='bj_pelanggan_v4';
+const load  =()=>{try{return JSON.parse(localStorage.getItem(SK))||[]}catch{return[]}};
+const save  =d=>localStorage.setItem(SK,JSON.stringify(d));
+const loadH =()=>{try{return JSON.parse(localStorage.getItem(HK))||[]}catch{return[]}};
+const saveH =d=>localStorage.setItem(HK,JSON.stringify(d));
+const loadC =()=>{try{return JSON.parse(localStorage.getItem(CK))||dfltCfg()}catch{return dfltCfg()}};
+const saveC =c=>localStorage.setItem(CK,JSON.stringify(c));
+const loadP =()=>{try{return JSON.parse(localStorage.getItem(PK))||[]}catch{return[]}};
+const saveP =d=>localStorage.setItem(PK,JSON.stringify(d));
+const dfltCfg=()=>({nama:'Ayu Tarviana Dewi',rek:'1010785517',salam:'Halo kak 👋\n\nBerikut rincian tagihan pesanan kakak:',catatan:'Terima kasih ☺️🙏🏻'});
+
+let cfg=loadC();
+let editCustHp=null;
+let nextId=1;
+
+function recalcNextId(){
+  const ords=load();
+  if(!ords.length){nextId=1;return}
+  const nums=ords.map(o=>{const m=o.order_id.match(/(\d+)$/);return m?parseInt(m[1]):0});
+  nextId=Math.max(...nums)+1;
+}
+recalcNextId();
+
+// ── Helpers ──
+const fmt=n=>'Rp'+Number(n).toLocaleString('id-ID');
+const tot=o=>o.items.reduce((s,it)=>s+it.qty*it.harga+(it.fee_jastip||0),0);
+const nowStr=()=>new Date().toLocaleString('id-ID');
+const esc=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
+// FIX UTAMA: normalise status dari CSV
+function normaliseStatus(raw){
+  if(!raw)return'BELUM LUNAS';
+  const s=raw.trim().toUpperCase();
+  if(s==='LUNAS')return'LUNAS';
+  if(s.includes('TAGIHAN')||s.includes('DIKIRIM'))return'TAGIHAN DIKIRIM';
+  // apapun selain dua di atas → BELUM LUNAS
+  return'BELUM LUNAS';
+}
+
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.className='toast'},3200);
+}
+
+// ── Tabs ──
+function switchTab(id){
+  const IDS=['orders','customers','history','import','settings'];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',IDS[i]===id));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='history')renderHistory();
+  if(id==='customers')renderCustomers();
+  if(id==='settings')loadCfgForm();
+}
+
+// ── Stats ──
+function updateStats(){
+  const ords=load();
+  document.getElementById('s-tot').textContent=ords.length;
+  document.getElementById('s-belum').textContent=ords.filter(o=>o.status==='BELUM LUNAS').length;
+  document.getElementById('s-tagih').textContent=ords.filter(o=>o.status==='TAGIHAN DIKIRIM').length;
+  document.getElementById('s-lunas').textContent=ords.filter(o=>o.status==='LUNAS').length;
+}
+
+// ── Render orders ──
+function renderOrders(){
+  const ords=load(); updateStats();
+  const fs=document.getElementById('f-status').value;
+  const q=(document.getElementById('f-q').value||'').toLowerCase();
+  const tb=document.getElementById('orders-tbody');
+  const em=document.getElementById('orders-empty');
+  const rows=ords.filter(o=>{
+    const ms=!fs||o.status===fs;
+    const mq=!q||o.order_id.toLowerCase().includes(q)||
+      o.nama_pelanggan.toLowerCase().includes(q)||
+      o.chat_id.toLowerCase().includes(q)||
+      o.items.some(it=>it.nama_produk.toLowerCase().includes(q));
+    return ms&&mq;
+  });
+  if(!rows.length){tb.innerHTML='';em.style.display='block';return}
+  em.style.display='none';
+  tb.innerHTML=rows.map(o=>{
+    const isL=o.status==='LUNAS';
+    const bc=o.status==='LUNAS'?'bl':o.status==='TAGIHAN DIKIRIM'?'bt':'bb';
+    const prods=o.items.map(it=>`<div>${it.nama_produk}<span style="color:#bbb"> ×${it.qty}</span></div>`).join('');
+    const aksi=isL
+      ?`<button class="btn" onclick="openDetail('${esc(o.order_id)}')">Detail</button>`
+      :`<button class="btn btn-amber" onclick="doTagih('${esc(o.order_id)}')">Tagih</button>
+        <button class="btn btn-green" onclick="doLunas('${esc(o.order_id)}')">Lunas</button>
+        <button class="btn" onclick="openDetail('${esc(o.order_id)}')">Detail</button>`;
+    return`<tr>
+      <td style="font-family:monospace;font-size:12px">${o.order_id}</td>
+      <td><div style="font-weight:500">${o.nama_pelanggan}</div><div style="font-size:11px;color:#888">${o.chat_id}</div></td>
+      <td>${prods}</td>
+      <td style="font-weight:500;white-space:nowrap">${fmt(tot(o))}</td>
+      <td><span class="badge ${bc}">${o.status}</span></td>
+      <td><div class="aksi">${aksi}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Pesan WA ──
+function buildPesan(o){
+  const c=cfg;
+  const items=o.items||[];
+
+  // Pisah item lunas dan belum lunas
+  const belum=items.filter(it=>!it.lunas);
+  const sudahLunas=items.filter(it=>it.lunas);
+
+  // Jika semua lunas, pakai semua item
+  const tampil=belum.length>0?belum:items;
+
+  const lines=tampil.map(it=>{
+    const satuanTotal=it.harga+(it.fee_jastip||0);
+    return`${it.nama_produk}\n${fmt(satuanTotal)} x ${it.qty}`;
+  }).join('\n\n');
+
+  const totalSemua=items.reduce((s,it)=>s+it.qty*(it.harga+(it.fee_jastip||0)),0);
+  const totalSudah=sudahLunas.reduce((s,it)=>s+it.qty*(it.harga+(it.fee_jastip||0)),0);
+  const totalSisa=totalSemua-totalSudah;
+
+  // Tampilkan total & sisa hanya jika ada sebagian yang sudah lunas
+  const totalLine=sudahLunas.length>0&&belum.length>0
+    ?`Total: ${fmt(totalSemua)}\nSudah dibayar: ${fmt(totalSudah)}\nSisa pembayaran: ${fmt(totalSisa)}`
+    :`Total: ${fmt(totalSisa)}`;
+
+  return`${c.salam}\n\n${lines}\n\n${totalLine}\n\nTransfer ke:\n💳 BCA ${c.rek} a.n ${c.nama}\n\n${c.catatan}`;
+}
+
+// ── Actions ──
+function doTagih(id){
+  const ords=load();
+  const o=ords.find(x=>x.order_id===id);
+  if(!o||o.status==='LUNAS')return;
+
+  const pesan=buildPesan(o);
+
+  // Normalise nomor HP → format internasional tanpa +
+  // Contoh: 08123... → 628123... | 628123... → tetap | +628... → 628...
+  let hp=String(o.chat_id).trim().replace(/\D/g,'');
+  if(hp.startsWith('0'))hp='62'+hp.slice(1);
+
+  // Buka WhatsApp Web dengan pesan sudah terisi
+  const url='https://wa.me/'+hp+'?text='+encodeURIComponent(pesan);
+  window.open(url,'_blank');
+
+  // Update status & histori
+  o.status='TAGIHAN DIKIRIM';
+  save(ords);
+  const hs=loadH();
+  hs.unshift({id,pelanggan:o.nama_pelanggan,chat_id:o.chat_id,total:tot(o),aksi:'TAGIHAN DIKIRIM',waktu:nowStr(),pesan});
+  saveH(hs);
+  renderOrders();
+  toast(`WA terbuka → ${o.nama_pelanggan}`);
+}
+
+function doLunas(id){
+  const ords=load();
+  const o=ords.find(x=>x.order_id===id);
+  if(!o)return;
+  o.status='LUNAS';
+  save(ords);
+  const hs=loadH();
+  hs.unshift({id,pelanggan:o.nama_pelanggan,chat_id:o.chat_id,total:tot(o),aksi:'LUNAS',waktu:nowStr(),pesan:''});
+  saveH(hs);
+  renderOrders();
+  toast(`Order ${id} lunas ✓`);
+}
+
+function deleteOrder(id){
+  if(!confirm(`Hapus order ${id}? Aksi ini tidak bisa dibatalkan.`))return;
+  save(load().filter(o=>o.order_id!==id));
+  closeOv('ov-detail');
+  renderOrders();
+  toast(`Order ${id} dihapus`);
+}
+
+function openDetail(id){
+  const ords=load();
+  const o=ords.find(x=>x.order_id===id);
+  if(!o)return;
+  document.getElementById('det-title').textContent=`${o.order_id} — ${o.nama_pelanggan}`;
+
+  // Render items dengan checkbox lunas per item
+  document.getElementById('det-items').innerHTML=o.items.map((it,i)=>{
+    const satuan=it.harga+(it.fee_jastip||0);
+    const subtotal=satuan*it.qty;
+    const checked=it.lunas?'checked':'';
+    const coret=it.lunas?'style="text-decoration:line-through;color:#aaa"':'';
+    return`<div class="mrow" style="align-items:flex-start;gap:8px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1" ${o.status==='LUNAS'?'':'onclick="toggleItemLunas(\''+id+'\','+i+')"'}>
+        <input type="checkbox" ${checked} ${o.status==='LUNAS'?'disabled':''} style="width:15px;height:15px;cursor:pointer;flex-shrink:0" onclick="event.stopPropagation();toggleItemLunas('${id}',${i})">
+        <span ${coret}>${it.nama_produk} ×${it.qty}</span>
+      </label>
+      <span ${coret}>${fmt(subtotal)}</span>
+    </div>`;
+  }).join('');
+
+  // Hitung total & sisa
+  refreshDetTotal(o);
+
+  const isL=o.status==='LUNAS';
+  const pw=document.getElementById('det-pesan-wrap');
+  pw.style.display=isL?'none':'block';
+  if(!isL)document.getElementById('det-pesan').textContent=buildPesan(o);
+  document.getElementById('det-tagih').disabled=isL;
+  document.getElementById('det-lunas').disabled=isL;
+  document.getElementById('det-copy').disabled=false;
+  document.getElementById('det-copy').textContent='Salin pesan WA';
+  document.getElementById('det-copy').onclick=()=>{
+    const teks=buildPesan(o);
+    copyText(teks, document.getElementById('det-copy'));
+  };
+  document.getElementById('det-tagih').onclick=()=>{closeOv('ov-detail');doTagih(id)};
+  document.getElementById('det-lunas').onclick=()=>{doLunas(id);closeOv('ov-detail')};
+  document.getElementById('det-del').onclick=()=>deleteOrder(id);
+  document.getElementById('ov-detail').classList.add('open');
+}
+
+function refreshDetTotal(o){
+  const items=o.items||[];
+  const totalSemua=items.reduce((s,it)=>s+it.qty*(it.harga+(it.fee_jastip||0)),0);
+  const sudahLunas=items.filter(it=>it.lunas);
+  const totalSudah=sudahLunas.reduce((s,it)=>s+it.qty*(it.harga+(it.fee_jastip||0)),0);
+  const totalSisa=totalSemua-totalSudah;
+  const el=document.getElementById('det-total');
+  if(sudahLunas.length>0&&sudahLunas.length<items.length){
+    el.innerHTML=`<span style="color:#888;font-size:12px;text-decoration:line-through">${fmt(totalSemua)}</span>&nbsp; Sisa: <span style="color:#854F0B">${fmt(totalSisa)}</span>`;
+  } else {
+    el.textContent=fmt(totalSisa);
+  }
+}
+
+function toggleItemLunas(orderId, idx){
+  const ords=load();
+  const o=ords.find(x=>x.order_id===orderId);
+  if(!o||o.status==='LUNAS')return;
+  o.items[idx].lunas=!o.items[idx].lunas;
+  // Jika semua item sudah lunas → set status order jadi LUNAS
+  if(o.items.every(it=>it.lunas)) o.status='LUNAS';
+  else if(o.status==='LUNAS') o.status='BELUM LUNAS';
+  save(ords);
+  // Refresh tampilan modal tanpa tutup
+  refreshDetTotal(o);
+  document.getElementById('det-pesan').textContent=buildPesan(o);
+  // Update coret per baris
+  const rows=document.getElementById('det-items').querySelectorAll('.mrow');
+  o.items.forEach((it,i)=>{
+    const span=rows[i]?rows[i].querySelectorAll('span'):[];
+    span.forEach(s=>{
+      if(it.lunas){s.style.textDecoration='line-through';s.style.color='#aaa';}
+      else{s.style.textDecoration='';s.style.color='';}
+    });
+  });
+  renderOrders();
+}
+
+// ── Add order ──
+function openAdd(){
+  document.getElementById('ov-add').classList.add('open');
+  document.getElementById('a-suggest').style.display='none';
+}
+function closeOv(id){document.getElementById(id).classList.remove('open')}
+
+function autofillCustomer(){
+  const val=document.getElementById('a-chat').value.trim().toLowerCase();
+  const sug=document.getElementById('a-suggest');
+  if(!val){sug.style.display='none';return}
+  const matches=loadP().filter(p=>p.hp.toLowerCase().includes(val)||p.nama.toLowerCase().includes(val));
+  if(!matches.length){sug.style.display='none';return}
+  sug.style.display='block';
+  sug.innerHTML=matches.slice(0,6).map(p=>`
+    <div class="suggest-item" onclick="fillCustomer('${esc(p.hp)}','${esc(p.nama)}')">
+      <span style="font-weight:500">${p.nama}</span>
+      <span style="color:#888;font-size:12px;margin-left:6px">${p.hp}</span>
+      ${p.kota?`<span style="color:#bbb;font-size:11px;margin-left:4px">· ${p.kota}</span>`:''}
+    </div>`).join('');
+}
+function fillCustomer(hp,nama){
+  document.getElementById('a-chat').value=hp;
+  document.getElementById('a-nama').value=nama;
+  document.getElementById('a-suggest').style.display='none';
+}
+
+function saveOrder(){
+  const chat=document.getElementById('a-chat').value.trim();
+  const nama=document.getElementById('a-nama').value.trim();
+  const produk=document.getElementById('a-produk').value.trim();
+  const qty=parseInt(document.getElementById('a-qty').value)||1;
+  const harga=parseInt(document.getElementById('a-harga').value)||0;
+  const fee=parseInt(document.getElementById('a-fee').value)||0;
+  if(!chat||!nama||!produk||!harga){toast('Lengkapi semua field wajib','err');return}
+  // auto-register pelanggan baru
+  const pel=loadP();
+  if(!pel.find(p=>p.hp===chat)){
+    pel.push({hp:chat,nama,kota:'',note:'',tgl:nowStr()});
+    saveP(pel);
+  }
+  const id=`ORD-${String(nextId++).padStart(3,'0')}`;
+  const ords=load();
+  ords.unshift({chat_id:chat,order_id:id,nama_pelanggan:nama,status:'BELUM LUNAS',items:[{nama_produk:produk,qty,harga,fee_jastip:fee}]});
+  save(ords);
+  closeOv('ov-add');
+  ['a-chat','a-nama','a-produk','a-harga'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('a-qty').value='1';
+  document.getElementById('a-fee').value='0';
+  document.getElementById('a-suggest').style.display='none';
+  renderOrders();
+  toast(`Order ${id} ditambahkan`);
+}
+
+// ── Customers ──
+function renderCustomers(){
+  const pel=loadP();
+  const q=(document.getElementById('cq').value||'').toLowerCase();
+  const grid=document.getElementById('cust-grid');
+  const em=document.getElementById('cust-empty');
+  const filtered=pel.filter(p=>!q||p.nama.toLowerCase().includes(q)||p.hp.toLowerCase().includes(q));
+  if(!filtered.length){grid.innerHTML='';em.style.display='block';return}
+  em.style.display='none';
+  const ords=load();
+  grid.innerHTML=filtered.map(p=>{
+    const custOrds=ords.filter(o=>o.chat_id===p.hp);
+    const totalBelanja=custOrds.reduce((s,o)=>s+tot(o),0);
+    return`<div class="cust-card">
+      <div style="flex:1">
+        <div class="cust-name">${p.nama}</div>
+        <div class="cust-meta">${p.hp}${p.kota?' · '+p.kota:''}</div>
+        ${p.note?`<div style="font-size:12px;color:#888;margin-top:2px">${p.note}</div>`:''}
+        <div style="font-size:11px;color:#bbb;margin-top:4px">${custOrds.length} order · ${fmt(totalBelanja)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-left:10px;flex-shrink:0">
+        <button class="btn" style="font-size:12px;padding:4px 10px" onclick="openEditCustomer('${esc(p.hp)}')">Edit</button>
+        <button class="btn btn-red" style="font-size:12px;padding:4px 10px" onclick="deleteCustomer('${esc(p.hp)}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddCustomer(){
+  editCustHp=null;
+  document.getElementById('cust-modal-title').textContent='Tambah pelanggan';
+  ['c-nama','c-hp','c-kota','c-note'].forEach(x=>document.getElementById(x).value='');
+  document.getElementById('c-hp').readOnly=false;
+  document.getElementById('cust-save-btn').textContent='Simpan';
+  document.getElementById('ov-cust').classList.add('open');
+}
+
+function openEditCustomer(hp){
+  const p=loadP().find(x=>x.hp===hp);
+  if(!p)return;
+  editCustHp=hp;
+  document.getElementById('cust-modal-title').textContent='Edit pelanggan';
+  document.getElementById('c-nama').value=p.nama||'';
+  document.getElementById('c-hp').value=p.hp||'';
+  document.getElementById('c-hp').readOnly=false;
+  document.getElementById('c-kota').value=p.kota||'';
+  document.getElementById('c-note').value=p.note||'';
+  document.getElementById('cust-save-btn').textContent='Simpan perubahan';
+  document.getElementById('ov-cust').classList.add('open');
+}
+
+function saveCustomer(){
+  const nama=document.getElementById('c-nama').value.trim();
+  const hp=document.getElementById('c-hp').value.trim();
+  const kota=document.getElementById('c-kota').value.trim();
+  const note=document.getElementById('c-note').value.trim();
+  if(!nama||!hp){toast('Nama dan no HP wajib diisi','err');return}
+  const pel=loadP();
+  if(editCustHp){
+    const idx=pel.findIndex(p=>p.hp===editCustHp);
+    if(idx>=0){
+      pel[idx]={...pel[idx],nama,hp,kota,note};
+      if(hp!==editCustHp){
+        const ords=load();
+        ords.forEach(o=>{if(o.chat_id===editCustHp){o.chat_id=hp;o.nama_pelanggan=nama;}});
+        save(ords);renderOrders();
+      }
+    }
+    toast('Pelanggan diperbarui');
+  } else {
+    if(pel.find(p=>p.hp===hp)){toast('No HP sudah terdaftar','err');return}
+    pel.push({hp,nama,kota,note,tgl:nowStr()});
+    toast('Pelanggan ditambahkan');
+  }
+  saveP(pel);
+  closeOv('ov-cust');
+  renderCustomers();
+}
+
+function deleteCustomer(hp){
+  if(!confirm('Hapus pelanggan ini? Data order tidak ikut terhapus.'))return;
+  saveP(loadP().filter(p=>p.hp!==hp));
+  renderCustomers();
+  toast('Pelanggan dihapus');
+}
+
+// ── History ──
+function renderHistory(){
+  const hist=loadH();
+  const q=(document.getElementById('h-q').value||'').toLowerCase();
+  const el=document.getElementById('hist-list');
+  const em=document.getElementById('hist-empty');
+  const filtered=hist.filter(h=>!q||h.id.toLowerCase().includes(q)||h.pelanggan.toLowerCase().includes(q)||h.chat_id.toLowerCase().includes(q));
+  if(!filtered.length){el.innerHTML='';em.style.display='block';return}
+  em.style.display='none';
+  el.innerHTML=filtered.map(h=>{
+    const bc=String(h.aksi).includes('LUNAS')?'bl':h.aksi==='TAGIHAN DIKIRIM'?'bt':'bb';
+    return`<div class="hist-item">
+      <span style="font-family:monospace;font-size:12px">${h.id}</span>
+      <span style="margin-left:8px;font-weight:500">${h.pelanggan}</span>
+      <span class="badge ${bc}" style="margin-left:8px">${h.aksi}</span>
+      <div class="hist-meta">${h.waktu} · ${fmt(h.total)} · ${h.chat_id}</div>
+      ${h.pesan?`<pre style="margin-top:6px;font-size:11px;color:#666;white-space:pre-wrap;background:#fafaf8;padding:8px;border-radius:8px;max-height:80px;overflow:auto;border:1px solid #eee;font-family:system-ui">${h.pesan}</pre>`:''}
+    </div>`;
+  }).join('');
+}
+function clearHistory(){
+  if(!confirm('Hapus semua histori?'))return;
+  saveH([]);renderHistory();toast('Histori dihapus');
+}
+
+// ── CSV parser (handle koma dalam tanda kutip) ──
+function parseCSVLine(line){
+  const res=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){inQ=!inQ;}
+    else if(c===','&&!inQ){res.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  res.push(cur.trim());
+  return res;
+}
+
+// ── CSV Import — FIX: status dibaca per baris, tidak ditimpa ──
+function handleCSV(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const lines=e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length<2){toast('File CSV kosong atau hanya header','err');input.value='';return}
+    const dataLines=lines.slice(1);
+    const grouped={};
+
+    dataLines.forEach(line=>{
+      const p=parseCSVLine(line);
+      if(p.length<5)return;
+      const chat_id    = p[0]||'';
+      const order_id   = p[1]||'';
+      const nama_produk= p[2]||'';
+      const qty        = parseFloat(p[3])||1;
+      const harga      = parseFloat(p[4])||0;
+      const fee_jastip = parseFloat(p[5])||0;
+      const rawStatus  = p[6]||'';
+
+      if(!order_id)return;
+
+      // ── FIX: status diambil dari baris PERTAMA order ini saja, tidak ditimpa baris berikutnya ──
+      if(!grouped[order_id]){
+        grouped[order_id]={
+          chat_id,
+          order_id,
+          nama_pelanggan: chat_id, // akan diperbarui dari DB pelanggan jika ada
+          status: normaliseStatus(rawStatus), // ← hanya set sekali di sini
+          items:[]
+        };
+      }
+      grouped[order_id].items.push({nama_produk,qty,harga,fee_jastip});
+    });
+
+    // Perbarui nama_pelanggan dari DB pelanggan jika ada
+    const pel=loadP();
+    Object.values(grouped).forEach(o=>{
+      const cust=pel.find(p=>p.hp===o.chat_id);
+      if(cust)o.nama_pelanggan=cust.nama;
+    });
+
+    const imported=Object.values(grouped);
+    const ords=load();
+    const hs=loadH();
+    let added=0,updated=0,lunasAuto=0;
+    let cntLunas=0,cntBelum=0,cntTagih=0;
+
+    imported.forEach(imp=>{
+      // Hitung distribusi status
+      if(imp.status==='LUNAS')cntLunas++;
+      else if(imp.status==='TAGIHAN DIKIRIM')cntTagih++;
+      else cntBelum++;
+
+      // Auto-register pelanggan baru
+      if(imp.chat_id&&!pel.find(p=>p.hp===imp.chat_id)){
+        pel.push({hp:imp.chat_id,nama:imp.chat_id,kota:'',note:'Import CSV',tgl:nowStr()});
+      }
+
+      const exists=ords.find(o=>o.order_id===imp.order_id);
+      if(exists){
+        exists.items=imp.items;
+        if(imp.status!==exists.status){
+          // Hanya log ke histori jika berubah menjadi LUNAS
+          if(imp.status==='LUNAS'&&exists.status!=='LUNAS'){
+            hs.unshift({id:imp.order_id,pelanggan:exists.nama_pelanggan,chat_id:exists.chat_id,total:tot({items:imp.items}),aksi:'LUNAS (dari CSV)',waktu:nowStr(),pesan:''});
+            lunasAuto++;
+          }
+          exists.status=imp.status;
+        }
+        updated++;
+      } else {
+        ords.push(imp);added++;
+      }
+    });
+
+    save(ords);saveH(hs);saveP(pel);
+    recalcNextId();renderOrders();
+
+    const logEl=document.getElementById('import-log');
+    logEl.style.display='block';
+    logEl.textContent=
+      `✅ Import selesai\n`+
+      `─────────────────────────\n`+
+      `  + ${added} order baru ditambahkan\n`+
+      `  ↻ ${updated} order diperbarui\n`+
+      `  ✓ ${lunasAuto} otomatis ditandai LUNAS\n\n`+
+      `Status yang terbaca dari CSV:\n`+
+      `  LUNAS           : ${cntLunas}\n`+
+      `  BELUM LUNAS     : ${cntBelum}\n`+
+      `  TAGIHAN DIKIRIM : ${cntTagih}\n`+
+      `  Total baris data: ${dataLines.length}`;
+
+    toast(`Import selesai: ${added} baru, ${updated} diperbarui`);
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ── CSV Export ──
+function toCSV(rows){
+  const hdr='chat_id,order_id,nama_produk,qty,harga,fee_jastip,status\n';
+  const body=rows.flatMap(o=>o.items.map(it=>[o.chat_id,o.order_id,it.nama_produk,it.qty,it.harga,it.fee_jastip||0,o.status].join(','))).join('\n');
+  return hdr+body;
+}
+function dlCSV(content,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));
+  a.download=name;a.click();
+}
+function exportCSV(){
+  const ords=load();if(!ords.length){toast('Tidak ada data','err');return}
+  dlCSV(toCSV(ords),'billing-semua.csv');toast('CSV diunduh');
+}
+function exportLunas(){
+  const l=load().filter(o=>o.status==='LUNAS');
+  if(!l.length){toast('Belum ada yang lunas','err');return}
+  dlCSV(toCSV(l),'billing-lunas.csv');toast('CSV lunas diunduh');
+}
+function exportTemplate(){
+  dlCSV(
+    'chat_id,order_id,nama_produk,qty,harga,fee_jastip,status\n'+
+    '628111000001,ORD-001,Tas Kulit,1,850000,50000,BELUM LUNAS\n'+
+    '628111000001,ORD-001,Dompet Kecil,2,120000,15000,BELUM LUNAS\n'+
+    '628111000002,ORD-002,Parfum 50ml,1,650000,75000,LUNAS\n',
+    'template-billing.csv'
+  );
+  toast('Template diunduh');
+}
+
+function getCfgFromForm(){
+  return{
+    nama:document.getElementById('cfg-nama').value.trim(),
+    rek:document.getElementById('cfg-rek').value.trim(),
+    salam:document.getElementById('cfg-salam').value.trim(),
+    catatan:document.getElementById('cfg-catatan').value.trim()
+  };
+}
+
+function previewCfg(){
+  // Baca langsung dari form, tidak perlu simpan dulu
+  const c=getCfgFromForm();
+  if(!c.rek||!c.nama){toast('Isi nama dan no rekening dulu','err');return}
+  const contoh={
+    items:[
+      {nama_produk:'Tas Kulit Italia',qty:1,harga:850000,fee_jastip:50000},
+      {nama_produk:'Dompet Kecil',qty:2,harga:120000,fee_jastip:15000}
+    ]
+  };
+  // Build pesan pakai nilai form langsung
+  const lines=contoh.items.map(it=>{
+    const satuanTotal=it.harga+(it.fee_jastip||0);
+    return`${it.nama_produk}\n${fmt(satuanTotal)} x ${it.qty}`;
+  }).join('\n\n');
+  const totalVal=contoh.items.reduce((s,it)=>s+it.qty*(it.harga+(it.fee_jastip||0)),0);
+  const preview=`${c.salam}\n\n${lines}\n\nTotal: ${fmt(totalVal)}\n\nTransfer ke:\n💳 BCA ${c.rek} a.n ${c.nama}\n\n${c.catatan}`;
+  const el=document.getElementById('cfg-preview');
+  document.getElementById('cfg-preview-text').textContent=preview;
+  el.style.display='block';
+}
+
+// ── Copy helper — works on file:// (no HTTPS needed) ──
+function copyText(teks,btn){
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(teks).then(()=>flashCopied(btn)).catch(()=>copyFallback(teks,btn));
+  } else {
+    copyFallback(teks,btn);
+  }
+}
+function copyFallback(teks,btn){
+  const ta=document.createElement('textarea');
+  ta.value=teks;
+  ta.style.cssText='position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+  document.body.appendChild(ta);
+  ta.focus();ta.select();
+  try{document.execCommand('copy');flashCopied(btn);}
+  catch(e){toast('Tidak bisa menyalin — salin manual dari preview','err');}
+  document.body.removeChild(ta);
+}
+function flashCopied(btn){
+  if(!btn)return;
+  const ori=btn.textContent;
+  btn.textContent='Tersalin ✓';
+  setTimeout(()=>btn.textContent=ori,2000);
+}
+
+function resetAllData(){
+  if(!confirm('HAPUS SEMUA DATA?\n\nOrder, histori, dan pelanggan akan terhapus permanen.\nPengaturan rekening tetap tersimpan.'))return;
+  save([]);saveH([]);saveP([]);
+  recalcNextId();renderOrders();
+  toast('Semua data direset');
+}
+
+// ── Settings ──
+function loadCfgForm(){
+  const c=loadC();
+  document.getElementById('cfg-nama').value=c.nama||'';
+  document.getElementById('cfg-rek').value=c.rek||'';
+  document.getElementById('cfg-salam').value=c.salam||'';
+  document.getElementById('cfg-catatan').value=c.catatan||'';
+}
+function saveSettings(){
+  const c=getCfgFromForm();
+  saveC(c);
+  cfg=c;
+  toast('Pengaturan disimpan ✓');
+  if(document.getElementById('cfg-preview').style.display==='block') previewCfg();
+}
+
+// ── Overlay close on bg click ──
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open')});
+});
+document.addEventListener('click',e=>{
+  const sug=document.getElementById('a-suggest');
+  if(sug&&!sug.contains(e.target)&&e.target.id!=='a-chat')sug.style.display='none';
+});
+
+// ── Init ──
+loadCfgForm();
+renderOrders();
+</script>
+</body>
+</html>
